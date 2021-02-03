@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using XboxCtrlrInput;
+using UnityEngine.InputSystem;
 
 public class Player : MonoBehaviour
 {
@@ -23,6 +23,8 @@ public class Player : MonoBehaviour
 	[SerializeField] private AudioClip shootSound = null;
 	[Header("Controller")]
 
+	private PlayerInputs playerInputs = null;
+	private Vector2 axisInput = Vector2.zero;
 	private Vector2 startScale = Vector2.one;
 	private float startGravityScale = 0f;
 	private Ball ball = null;
@@ -33,23 +35,29 @@ public class Player : MonoBehaviour
 
 //------------------------------[Change Move & jump]-------------------------//
 
+	void Awake()
+	{
+		SetupInputs();
+	}
+
 	void Update()
 	{
-		Move();
 		UpdateAnimation();
-		if (GetShoot())
-			Shot();
+		Move();
+	}
+
+	private void SetAxisInput(InputAction.CallbackContext context = default(InputAction.CallbackContext))
+	{
+		axisInput = context.ReadValue<Vector2>();
 	}
 
 	private void Move()
 	{
-		if (!shoked && (GetHorizontal() != 0 || IsOnFloor()))
+		if (!shoked && (axisInput.x != 0 || IsOnFloor()))
 			canMove = true;
 		if (canMove)
-			rb.velocity = new Vector2(GetHorizontal() * speed, rb.velocity.y);
-		if (GetJump())
-			Jump();
-		if (GetVertical() < -0.5f)
+			rb.velocity = new Vector2(axisInput.x * speed, rb.velocity.y);
+		if (axisInput.y < -0.5f)
 			rb.gravityScale = fastFallGravityScale;
 		else
 			rb.gravityScale = startGravityScale;
@@ -95,11 +103,11 @@ public class Player : MonoBehaviour
 
 	private void UpdateAnimation()
 	{
-		this.animator.SetFloat("speedX", Mathf.Abs(rb.velocity.x));
-		this.animator.SetFloat("speedY", rb.velocity.y);
-		this.animator.SetBool("crounch", AxisRawer(GetVertical()) == -1);
-		if (this.GetHorizontal() != 0)
-			this.transform.localScale = new Vector2(Mathf.Sign(GetHorizontal()) * this.startScale.x, this.startScale.y);
+		animator.SetFloat("speedX", Mathf.Abs(rb.velocity.x));
+		animator.SetFloat("speedY", rb.velocity.y);
+		animator.SetBool("crounch", axisInput.y < 0f);
+		if (axisInput.x != 0)
+			transform.localScale = new Vector2(Mathf.Sign(axisInput.x) * this.startScale.x, this.startScale.y);
 	}
 //-----------------------------------[Ball]-----------------------------------//
 	private void OnTriggerEnter2D(Collider2D other)
@@ -112,93 +120,48 @@ public class Player : MonoBehaviour
 
 	private void OnTriggerExit2D(Collider2D other)
 	{
-		if (this.ball == null)
+		if (ball == null)
 			return;
 		if (other.gameObject == ball.gameObject)
-			this.ball = null;
+			ball = null;
 	}
 
 	private void Shot()
 	{
 		Vector2 direction = Vector2.zero;
 
-		this.animator.SetTrigger("punch");
-		if (!this.GetShoot() || !ball)
+		animator.SetTrigger("punch");
+		if (!ball)
 			return;
-		this.audioSource?.PlayOneShot(shootSound);
-		direction = new Vector2(this.GetHorizontal(), this.GetVertical());
+		audioSource?.PlayOneShot(shootSound);
+		direction = new Vector2(direction.x, direction.y);
 		if (direction.magnitude == 0)
 			direction = (ball.transform.position - transform.position);
 		direction.y += verticalShootOffset;
-		this.ball.Shot(direction.normalized, 0.2f, this.playerColor);
+		ball.Shot(direction.normalized, 0.2f, playerColor);
 	}
 
 	private void OnCollisionEnter2D(Collision2D other)
 	{
 		if (other.gameObject == this.ball?.gameObject)
-			this.ball.SetTrailColor(playerColor);
+			ball.SetTrailColor(playerColor);
 	}
 
 //------------------------------[INPUT SYSTEM]--------------------------------//
 
-	private float GetHorizontal()
+	private void SetupInputs()
 	{
-		if (XCI.IsPluggedIn((XboxController)playerId))
-			return (DeadZoner(XCI.GetAxis(XboxAxis.LeftStickX, (XboxController)playerId)));
-		return (DeadZoner(GetAxis("Horizontal")));
+		playerInputs = new PlayerInputs();
+
+		playerInputs.Enable();
+		playerInputs.Game.Move.performed += SetAxisInput;
+		playerInputs.Game.Move.canceled += SetAxisInput;
+
+		playerInputs.Game.Jump.performed += (_) => Jump();
+		playerInputs.Game.Shot.performed += (_) => Shot();
 	}
 
-	private float GetVertical()
-	{
-		if (XCI.IsPluggedIn((XboxController)playerId))
-			return (DeadZoner(XCI.GetAxis(XboxAxis.LeftStickY, (XboxController)playerId)));
-		return (DeadZoner(GetAxis("Vertical")));
-	}
-
-	private bool GetJump()
-	{
-		if (XCI.IsPluggedIn((XboxController)playerId))
-			return (XCI.GetButtonDown(XboxButton.A, (XboxController)playerId));
-		return (GetButtonDown("jump"));
-	}
-
-
-	private bool GetShoot()
-	{
-		if (XCI.IsPluggedIn((XboxController)playerId))
-			return (XCI.GetButtonDown(XboxButton.B, (XboxController)playerId));
-		return (GetButtonDown("punch"));
-	}
-
-	private float AxisRawer(float axisValue)
-	{
-		if (axisValue == 0)
-			return (0);
-		return (Mathf.Sign(axisValue));
-	}
-
-	private float GetAxis(string axisName)
-	{
-		return (Input.GetAxis(axisName + this.playerId.ToString()));
-	}
-
-	private float GetAxisRaw(string axisName)
-	{
-		return (Input.GetAxisRaw(axisName + this.playerId.ToString()));
-	}
-
-	private bool GetButtonDown(string buttonName)
-	{
-		return (Input.GetButtonDown(buttonName + this.playerId.ToString()));
-	}
-
-	private float DeadZoner(float axisValue)
-	{
-		if (Mathf.Abs(axisValue) < stickDeadZone)
-			return (0);
-		return (axisValue);
-	}
-	//------------------------------[INPUT SYSTEM]--------------------------------//
+	//------------------------------[DEBUG]--------------------------------//
 	private void OnDrawGizmosSelected()
 	{
 		Gizmos.color = Color.magenta;

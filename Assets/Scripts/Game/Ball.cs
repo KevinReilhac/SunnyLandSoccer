@@ -35,7 +35,6 @@ public class Ball : MonoBehaviour
 		trail.startColor = Color.white;
 		rb.angularVelocity = 0f;
 		spriteRandomizer.Randomize();
-		print("uh");
 		trail.Clear();
 	}
 
