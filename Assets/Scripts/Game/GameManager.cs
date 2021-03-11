@@ -2,67 +2,44 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using Mirror;
 
-public class GameManager : MonoBehaviour
+public class GameManager : NetworkManager
 {
 	[Header("Ball")]
 	[SerializeField] private Transform ballSpawnPosition = null;
 	[Header("Win")]
-	[SerializeField] int maxScore = 5;
-	[SerializeField] ScoreBoard score = null;
 	[SerializeField] private GameObject centerBend = null;
 	[SerializeField] private GameObject redWin = null;
 	[SerializeField] private GameObject blueWin = null;
-	[Header("Audio")]
-	[SerializeField] private AudioSource audioSource = null;
-	[SerializeField] private AudioSource musicSource = null;
-	[SerializeField] private AudioClip winBlueSound = null;
-	[SerializeField] private AudioClip winRedSound = null;
-	private Goal[] goals;
+	[Header("Options")]
+	[SerializeField] private PlayerColors playerColors;
+	[SerializeField] private GameMode gameMode = null;
 
-	private bool ended = false;
-	private Ball ball;
+	[SerializeField] private List<Transform> leftPlayerPositions = new List<Transform>();
+	[SerializeField] private List<Transform> rightPlayerPositions = new List<Transform>();
 
+	private bool _ended = false;
+	private int leftTeamPlayerSize = 0;
+	private int rightTeamPlayerSize = 0;
 
-	private void Start()
+	public override void Awake()
 	{
-		ball = GameObject.FindObjectOfType<Ball>();
+		base.Awake();
+		maxConnections = gameMode.MaxPlayer;
+	}
+
+	public override void OnServerAddPlayer(NetworkConnection conn)
+	{
+		Transform start = numPlayers % 2 == 0 ? leftPlayerPositions[leftTeamPlayerSize++] : rightPlayerPositions[rightTeamPlayerSize++];
+		Player player = Instantiate(playerPrefab, start.position, start.rotation).GetComponent<Player>();
+
+		player.PlayerColor = playerColors.GetColorByIndex(numPlayers);
+		NetworkServer.AddPlayerForConnection(conn, player.gameObject);
 	}
 
 	private void Update()
 	{
-		if (ended)
-			return;
-		if (score?.GetHighestScore() == maxScore)
-			Win();
-	}
-
-	public void RespawnBall()
-	{
-		if (score.GetHighestScore() != maxScore) {
-			ball.transform.position = ballSpawnPosition.position;
-			ball.Init();
-		}
-		else
-			Destroy(ball.gameObject);
-	}
-
-	private void Win()
-	{
-		int highest = score.GetHighestScore();
-
-		musicSource?.Stop();
-		centerBend?.SetActive(true);
-		ended = true;
-		if (score?.GetScore(LeftRight.Left) == highest) {
-			redWin?.SetActive(true);
-			audioSource?.PlayOneShot(winBlueSound);
-		}
-		else {
-			blueWin?.SetActive(true);
-			audioSource?.PlayOneShot(winRedSound);
-		}
-		StartCoroutine(ChangeScene(3f));
 	}
 
 	private IEnumerator ChangeScene(float waitTime)

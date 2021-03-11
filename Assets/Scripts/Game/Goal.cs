@@ -5,8 +5,6 @@ using UnityEngine.Events;
 
 public class Goal : MonoBehaviour
 {
-	[SerializeField] private ScoreBoard scoreBoard = null;
-	[SerializeField] private GameManager gameManager = null;
 	[SerializeField] private LeftRight side = LeftRight.Left;
 	[SerializeField] private UnityEvent onGoal = null;
 	[Header("Audio")]
@@ -22,17 +20,11 @@ public class Goal : MonoBehaviour
 		players = GameObject.FindObjectsOfType<Player>();
 	}
 
-	private void Update()
-	{
-	}
-
 	private void OnTriggerEnter2D(Collider2D other)
 	{
 		Ball ball = other.gameObject.GetComponent<Ball>();
 		if (!ball)
 			return;
-		scoreBoard.AddScore(side);
-		gameManager.RespawnBall();
 		audioSource.PlayOneShot(onGoalSound);
 		onGoal.Invoke();
 		Shockwave();
@@ -40,7 +32,8 @@ public class Goal : MonoBehaviour
 
 	private void Shockwave()
 	{
-		foreach (Player player in players) {
+		foreach (Player player in players)
+		{
 			Vector2 direction = (Vector2)(player.transform.position - transform.position);
 			float distance = Vector2.Distance(transform.position, player.transform.position);
 

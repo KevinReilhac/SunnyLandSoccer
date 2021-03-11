@@ -13,6 +13,7 @@ public class Player : NetworkBehaviour
 	[SerializeField] private float speed = 1;
 	[SerializeField] private float jumpForce = 1;
 	[SerializeField] private float verticalShootOffset = 0.2f;
+	[SyncVar]
 	[SerializeField] private Color playerColor = Color.red;
 	[SerializeField] private SpriteRenderer marker = null;
 	[SerializeField] private float distFromFloor = 0f;
@@ -92,9 +93,8 @@ public class Player : NetworkBehaviour
 	void Start()
 	{
 		startScale = transform.localScale;
-		if (marker)
-			marker.color = playerColor;
 		startGravityScale = rb.gravityScale;
+		RefreshMarkerColor();
 	}
 
 	private bool IsOnFloor()
@@ -182,6 +182,22 @@ public class Player : NetworkBehaviour
 		PlayerInputs.Game.Shot.performed += (_) => Shot();
 
 		print(PlayerInputs);
+	}
+
+	public Color PlayerColor
+	{
+		get => playerColor;
+		set
+		{
+			playerColor = value;
+			RefreshMarkerColor();
+		}
+	}
+
+	private void RefreshMarkerColor()
+	{
+		if (marker)
+			marker.color = playerColor;
 	}
 
 	//------------------------------[DEBUG]--------------------------------//
