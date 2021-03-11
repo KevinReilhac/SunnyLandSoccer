@@ -1,9 +1,10 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Mirror;
 using UnityEngine.InputSystem;
 
-public class Player : MonoBehaviour
+public class Player : NetworkBehaviour
 {
 	[Header("Components needed")]
 	public Rigidbody2D rb = null;
@@ -24,54 +25,70 @@ public class Player : MonoBehaviour
 	[Header("Controller")]
 
 	private PlayerInputs playerInputs = null;
-	private Vector2 axisInput = Vector2.zero;
+	private Vector2 lastInput = Vector2.zero;
 	private Vector2 startScale = Vector2.one;
 	private float startGravityScale = 0f;
 	private Ball ball = null;
-	public bool shoked = false;
-	public bool canMove = true;
 
-	private const float stickDeadZone = 0.1f;
+	private PlayerInputs PlayerInputs
+	{
+		get
+		{
+			if (playerInputs == null)
+				playerInputs = new PlayerInputs();
+			return (playerInputs);
+		}
+	}
 
 //------------------------------[Change Move & jump]-------------------------//
 
-	void Awake()
+	public override void OnStartAuthority()
 	{
+		enabled = true;
 		SetupInputs();
 	}
 
+	[ClientCallback]
+	private void OnEnable() =>	PlayerInputs.Enable();
+	[ClientCallback]
+	private void OnDisable() =>	PlayerInputs.Disable();
+
+	[ClientCallback]
 	void Update()
 	{
 		UpdateAnimation();
 		Move();
 	}
 
+	[Client]
 	private void SetAxisInput(InputAction.CallbackContext context = default(InputAction.CallbackContext))
 	{
-		axisInput = context.ReadValue<Vector2>();
+		lastInput = context.ReadValue<Vector2>();
 	}
 
+	[ClientCallback]
 	private void Move()
 	{
-		if (!shoked && (axisInput.x != 0 || IsOnFloor()))
-			canMove = true;
-		if (canMove)
-			rb.velocity = new Vector2(axisInput.x * speed, rb.velocity.y);
-		if (axisInput.y < -0.5f)
+		if (lastInput.y < -0.5f)
 			rb.gravityScale = fastFallGravityScale;
 		else
 			rb.gravityScale = startGravityScale;
+
+		rb.velocity = new Vector2(lastInput.x * speed, rb.velocity.y);
 	}
 
+//---------------[Movement Logic]-----------------------//
+
+	[Client]
 	private void Jump()
 	{
-		if (IsOnFloor()) {
+		if (IsOnFloor())
+		{
 			rb.AddForce(new Vector2(0, jumpForce), ForceMode2D.Impulse);
 			audioSource?.PlayOneShot(jumpSound);
 		}
 	}
 
-//--------------------------------[Don't touch]-------------------------------//
 	void Start()
 	{
 		startScale = transform.localScale;
@@ -80,16 +97,18 @@ public class Player : MonoBehaviour
 		startGravityScale = rb.gravityScale;
 	}
 
-
 	private bool IsOnFloor()
 	{
 		RaycastHit2D[] hit = Physics2D.RaycastAll(transform.position, -Vector2.up);
 		RaycastHit2D? floorhit = null;
 		float closest = Mathf.Infinity;
 
-		foreach (RaycastHit2D eachHit in hit) {
-			if (eachHit.collider.tag == "Floor") {
-				if (eachHit.distance < closest) {
+		foreach (RaycastHit2D eachHit in hit)
+		{
+			if (eachHit.collider.tag == "Floor")
+			{
+				if (eachHit.distance < closest)
+				{
 					floorhit = eachHit;
 					closest = eachHit.distance;
 				}
@@ -101,13 +120,14 @@ public class Player : MonoBehaviour
 		return (floorhit?.distance < distFromFloor);
 	}
 
+	[ClientCallback]
 	private void UpdateAnimation()
 	{
 		animator.SetFloat("speedX", Mathf.Abs(rb.velocity.x));
 		animator.SetFloat("speedY", rb.velocity.y);
-		animator.SetBool("crounch", axisInput.y < 0f);
-		if (axisInput.x != 0)
-			transform.localScale = new Vector2(Mathf.Sign(axisInput.x) * this.startScale.x, this.startScale.y);
+		animator.SetBool("crounch", lastInput.y < 0f);
+		if (lastInput.x != 0)
+			transform.localScale = new Vector2(Mathf.Sign(lastInput.x) * this.startScale.x, this.startScale.y);
 	}
 //-----------------------------------[Ball]-----------------------------------//
 	private void OnTriggerEnter2D(Collider2D other)
@@ -126,10 +146,12 @@ public class Player : MonoBehaviour
 			ball = null;
 	}
 
+	[Command]
 	private void Shot()
 	{
 		Vector2 direction = Vector2.zero;
 
+		print("try shot");
 		animator.SetTrigger("punch");
 		if (!ball)
 			return;
@@ -149,16 +171,17 @@ public class Player : MonoBehaviour
 
 //------------------------------[INPUT SYSTEM]--------------------------------//
 
+	[Client]
 	private void SetupInputs()
 	{
-		playerInputs = new PlayerInputs();
+		print("setup");
+		PlayerInputs.Game.Move.performed += SetAxisInput;
+		PlayerInputs.Game.Move.canceled += SetAxisInput;
 
-		playerInputs.Enable();
-		playerInputs.Game.Move.performed += SetAxisInput;
-		playerInputs.Game.Move.canceled += SetAxisInput;
+		PlayerInputs.Game.Jump.performed += (_) => Jump();
+		PlayerInputs.Game.Shot.performed += (_) => Shot();
 
-		playerInputs.Game.Jump.performed += (_) => Jump();
-		playerInputs.Game.Shot.performed += (_) => Shot();
+		print(PlayerInputs);
 	}
 
 	//------------------------------[DEBUG]--------------------------------//

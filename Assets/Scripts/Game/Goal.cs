@@ -45,17 +45,7 @@ public class Goal : MonoBehaviour
 			float distance = Vector2.Distance(transform.position, player.transform.position);
 
 			player.rb.AddForce(direction.normalized * 1000 * shockwaveForce * (1 / (distance * 1000)), ForceMode2D.Force);
-			StartCoroutine(ShockPlayer(player));
 		}
 	}
 
-	IEnumerator ShockPlayer(Player player)
-	{
-		player.shoked = true;
-		player.canMove = false;
-		yield return new WaitForSeconds(0.2f);
-		player.shoked = false;
-		yield return new WaitForSeconds(0.2f);
-		player.canMove = true;
-	}
 }

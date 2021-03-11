@@ -99,6 +99,8 @@ GameObject:
   - component: {fileID: 6099618900163009685}
   - component: {fileID: 174553004055839095}
   - component: {fileID: 8544315037624124696}
+  - component: {fileID: 2266269776724518926}
+  - component: {fileID: 3550184174413814549}
   m_Layer: 8
   m_Name: PlayerPrefab
   m_TagString: Player
@@ -224,6 +226,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 04b6212a9549f7a4cb77de70f8055ac1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  syncMode: 0
+  syncInterval: 0.1
   rb: {fileID: 7758573391841504042}
   animator: {fileID: 7758573391841504046}
   speed: 2
@@ -237,8 +241,6 @@ MonoBehaviour:
   audioSource: {fileID: 174553004055839095}
   jumpSound: {fileID: 8300000, guid: 88a9de6a0f86a204f9b53a1d81efc6e7, type: 3}
   shootSound: {fileID: 8300000, guid: 07c3354631c12dc4e820ba4491401c52, type: 3}
-  shoked: 0
-  canMove: 1
 --- !u!61 &7758573391841504037
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -408,3 +410,37 @@ PolygonCollider2D:
       - {x: -0.09011215, y: 0.21696474}
       - {x: -0.09438354, y: -0.13967226}
       - {x: 0.22285798, y: -0.141757}
+--- !u!114 &2266269776724518926
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7758573391841504047}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b91ecbcc199f4492b9a91e820070131, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  sceneId: 0
+  serverOnly: 0
+  m_AssetId: 
+  hasSpawned: 0
+--- !u!114 &3550184174413814549
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7758573391841504047}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2f74aedd71d9a4f55b3ce499326d45fb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  syncMode: 1
+  syncInterval: 0
+  clientAuthority: 1
+  localPositionSensitivity: 0.01
+  localRotationSensitivity: 0.01
+  localScaleSensitivity: 0.01
