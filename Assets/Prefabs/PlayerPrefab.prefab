@@ -232,14 +232,14 @@ MonoBehaviour:
   syncInterval: 0.1
   rb: {fileID: 7758573391841504042}
   animator: {fileID: 7758573391841504046}
+  boxCollider: {fileID: 7758573391841504037}
   speed: 2
   jumpForce: 4
   verticalShootOffset: 0.2
   playerColor: {r: 1, g: 0.4627451, b: 0.45882353, a: 1}
   marker: {fileID: 3622682732851405647}
-  distFromFloor: 0.18
   fastFallGravityScale: 2
-  playerId: 1
+  floorCheckDistance: 0.03
   audioSource: {fileID: 174553004055839095}
   jumpSound: {fileID: 8300000, guid: 88a9de6a0f86a204f9b53a1d81efc6e7, type: 3}
   shootSound: {fileID: 8300000, guid: 07c3354631c12dc4e820ba4491401c52, type: 3}

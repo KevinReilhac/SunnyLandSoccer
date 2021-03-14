@@ -590,7 +590,7 @@ GameObject:
   - component: {fileID: 100273972}
   - component: {fileID: 100273974}
   - component: {fileID: 100273973}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: GoalLeft_1
   m_TagString: Floor
   m_Icon: {fileID: 0}
@@ -983,7 +983,7 @@ GameObject:
   - component: {fileID: 450051611}
   - component: {fileID: 450051610}
   - component: {fileID: 450051609}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: Floor1
   m_TagString: Floor
   m_Icon: {fileID: 0}
@@ -1878,7 +1878,7 @@ GameObject:
   m_Component:
   - component: {fileID: 674910108}
   - component: {fileID: 674910109}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: Floor2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2620,7 +2620,7 @@ GameObject:
   - component: {fileID: 1081351848}
   - component: {fileID: 1081351847}
   - component: {fileID: 1081351846}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: GoalLeft_1
   m_TagString: Floor
   m_Icon: {fileID: 0}
@@ -5292,6 +5292,11 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 1707280595}
     m_Modifications:
+    - target: {fileID: 7036669895792652782, guid: f695704cfea033d46a6926c43fd62908,
+        type: 3}
+      propertyPath: m_Materials.Array.size
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 7036669895792652784, guid: f695704cfea033d46a6926c43fd62908,
         type: 3}
       propertyPath: m_Name

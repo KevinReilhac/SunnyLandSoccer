@@ -6,6 +6,8 @@ using Mirror;
 
 public class GameManager : NetworkManager
 {
+	private static GameManager instance = null;
+
 	[Header("Ball")]
 	[SerializeField] private Transform ballSpawnPosition = null;
 	[Header("Win")]
@@ -23,6 +25,16 @@ public class GameManager : NetworkManager
 	private int leftTeamPlayerSize = 0;
 	private int rightTeamPlayerSize = 0;
 
+	public static GameManager Instance
+	{
+		get
+		{
+			if (instance == null)
+				instance = GameObject.FindObjectOfType<GameManager>();
+			return (instance);
+		}
+	}
+
 	public override void Awake()
 	{
 		base.Awake();
@@ -36,10 +48,6 @@ public class GameManager : NetworkManager
 
 		player.PlayerColor = playerColors.GetColorByIndex(numPlayers);
 		NetworkServer.AddPlayerForConnection(conn, player.gameObject);
-	}
-
-	private void Update()
-	{
 	}
 
 	private IEnumerator ChangeScene(float waitTime)

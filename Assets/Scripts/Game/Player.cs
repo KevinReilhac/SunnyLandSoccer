@@ -9,16 +9,16 @@ public class Player : NetworkBehaviour
 	[Header("Components needed")]
 	public Rigidbody2D rb = null;
 	[SerializeField] private Animator animator = null;
+	[SerializeField] private BoxCollider2D boxCollider = null;
 	[Header("Player options")]
 	[SerializeField] private float speed = 1;
 	[SerializeField] private float jumpForce = 1;
 	[SerializeField] private float verticalShootOffset = 0.2f;
-	[SyncVar]
-	[SerializeField] private Color playerColor = Color.red;
+	[SyncVar] [SerializeField] private Color playerColor = Color.red;
 	[SerializeField] private SpriteRenderer marker = null;
-	[SerializeField] private float distFromFloor = 0f;
 	[SerializeField] private float fastFallGravityScale = 1f;
-	public int playerId = 1;
+	[Header("Floor check")]
+	[SerializeField] private float floorCheckDistance = 0f;
 	[Header("Audio")]
 	[SerializeField] private AudioSource audioSource = null;
 	[SerializeField] private AudioClip jumpSound = null;
@@ -90,34 +90,21 @@ public class Player : NetworkBehaviour
 		}
 	}
 
-	void Start()
+
+	private void Start()
 	{
 		startScale = transform.localScale;
 		startGravityScale = rb.gravityScale;
 		RefreshMarkerColor();
 	}
 
+	[Client]
 	private bool IsOnFloor()
 	{
-		RaycastHit2D[] hit = Physics2D.RaycastAll(transform.position, -Vector2.up);
-		RaycastHit2D? floorhit = null;
-		float closest = Mathf.Infinity;
+		int layerMask = 1 << LayerMask.NameToLayer("Floor");
+		RaycastHit2D hit = Physics2D.BoxCast(boxCollider.bounds.center, boxCollider.bounds.size, 0f, Vector2.down, floorCheckDistance, layerMask);
 
-		foreach (RaycastHit2D eachHit in hit)
-		{
-			if (eachHit.collider.tag == "Floor")
-			{
-				if (eachHit.distance < closest)
-				{
-					floorhit = eachHit;
-					closest = eachHit.distance;
-				}
-			}
-		}
-
-		if (floorhit == null)
-			return (false);
-		return (floorhit?.distance < distFromFloor);
+		return (hit.collider != null);
 	}
 
 	[ClientCallback]
@@ -151,7 +138,6 @@ public class Player : NetworkBehaviour
 	{
 		Vector2 direction = Vector2.zero;
 
-		print("try shot");
 		animator.SetTrigger("punch");
 		if (!ball)
 			return;
@@ -203,7 +189,7 @@ public class Player : NetworkBehaviour
 	//------------------------------[DEBUG]--------------------------------//
 	private void OnDrawGizmosSelected()
 	{
-		Gizmos.color = Color.magenta;
-		Gizmos.DrawLine(transform.position, transform.position - new Vector3(0, distFromFloor, 0));
+	
+		Gizmos.DrawLine(boxCollider.bounds.center, boxCollider.bounds.center + (Vector3.down * (boxCollider.bounds.extents.y + floorCheckDistance)));
 	}
 }
