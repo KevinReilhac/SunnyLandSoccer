@@ -30,7 +30,17 @@ public class Player : NetworkBehaviour
 	private Vector2 startScale = Vector2.one;
 	private float startGravityScale = 0f;
 	private Ball ball = null;
+	private LeftRight teamSide = LeftRight.None;
 
+//--------------------------[INIT]--------------------------------------------//
+
+	private void Start()
+	{
+		startScale = transform.localScale;
+		startGravityScale = rb.gravityScale;
+		RefreshMarkerColor();
+	}
+//------------------------------[INPUT SYSTEM]--------------------------------//
 	private PlayerInputs PlayerInputs
 	{
 		get
@@ -40,8 +50,6 @@ public class Player : NetworkBehaviour
 			return (playerInputs);
 		}
 	}
-
-//------------------------------[Change Move & jump]-------------------------//
 
 	public override void OnStartAuthority()
 	{
@@ -54,6 +62,17 @@ public class Player : NetworkBehaviour
 	[ClientCallback]
 	private void OnDisable() =>	PlayerInputs.Disable();
 
+	[Client]
+	private void SetupInputs()
+	{
+		PlayerInputs.Game.Move.performed += SetAxisInput;
+		PlayerInputs.Game.Move.canceled += SetAxisInput;
+
+		PlayerInputs.Game.Jump.performed += (_) => Jump();
+		PlayerInputs.Game.Shot.performed += (_) => Shot();
+	}
+
+//---------------------------------[Move & jump]------------------------------//
 	[ClientCallback]
 	void Update()
 	{
@@ -78,7 +97,7 @@ public class Player : NetworkBehaviour
 		rb.velocity = new Vector2(lastInput.x * speed, rb.velocity.y);
 	}
 
-//---------------[Movement Logic]-----------------------//
+//----------------------------[Movement Logic]--------------------------------//
 
 	[Client]
 	private void Jump()
@@ -90,14 +109,6 @@ public class Player : NetworkBehaviour
 		}
 	}
 
-
-	private void Start()
-	{
-		startScale = transform.localScale;
-		startGravityScale = rb.gravityScale;
-		RefreshMarkerColor();
-	}
-
 	[Client]
 	private bool IsOnFloor()
 	{
@@ -106,6 +117,7 @@ public class Player : NetworkBehaviour
 
 		return (hit.collider != null);
 	}
+
 
 	[ClientCallback]
 	private void UpdateAnimation()
@@ -117,21 +129,6 @@ public class Player : NetworkBehaviour
 			transform.localScale = new Vector2(Mathf.Sign(lastInput.x) * this.startScale.x, this.startScale.y);
 	}
 //-----------------------------------[Ball]-----------------------------------//
-	private void OnTriggerEnter2D(Collider2D other)
-	{
-		Ball enterBall = other.gameObject.GetComponent<Ball>();
-
-		if (enterBall)
-			this.ball = enterBall;
-	}
-
-	private void OnTriggerExit2D(Collider2D other)
-	{
-		if (ball == null)
-			return;
-		if (other.gameObject == ball.gameObject)
-			ball = null;
-	}
 
 	[Command]
 	private void Shot()
@@ -149,6 +146,22 @@ public class Player : NetworkBehaviour
 		ball.Shot(direction.normalized, 0.2f, playerColor);
 	}
 
+	private void OnTriggerEnter2D(Collider2D other)
+	{
+		Ball enterBall = other.gameObject.GetComponent<Ball>();
+
+		if (enterBall)
+			this.ball = enterBall;
+	}
+
+	private void OnTriggerExit2D(Collider2D other)
+	{
+		if (ball == null)
+			return;
+		if (other.gameObject == ball.gameObject)
+			ball = null;
+	}
+
 	private void OnCollisionEnter2D(Collision2D other)
 	{
 		if (other.gameObject == this.ball?.gameObject)
@@ -156,19 +169,6 @@ public class Player : NetworkBehaviour
 	}
 
 //------------------------------[INPUT SYSTEM]--------------------------------//
-
-	[Client]
-	private void SetupInputs()
-	{
-		print("setup");
-		PlayerInputs.Game.Move.performed += SetAxisInput;
-		PlayerInputs.Game.Move.canceled += SetAxisInput;
-
-		PlayerInputs.Game.Jump.performed += (_) => Jump();
-		PlayerInputs.Game.Shot.performed += (_) => Shot();
-
-		print(PlayerInputs);
-	}
 
 	public Color PlayerColor
 	{
@@ -186,10 +186,15 @@ public class Player : NetworkBehaviour
 			marker.color = playerColor;
 	}
 
+	//------------------------------[ACCESSORS]--------------------------------//
+	public LeftRight TeamSide
+	{
+		set => teamSide = value;
+		get => teamSide;
+	}
 	//------------------------------[DEBUG]--------------------------------//
 	private void OnDrawGizmosSelected()
 	{
-	
 		Gizmos.DrawLine(boxCollider.bounds.center, boxCollider.bounds.center + (Vector3.down * (boxCollider.bounds.extents.y + floorCheckDistance)));
 	}
 }

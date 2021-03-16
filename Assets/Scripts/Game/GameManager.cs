@@ -8,6 +8,7 @@ public class GameManager : NetworkManager
 {
 	private static GameManager instance = null;
 
+	[SerializeField] private Score score = null;
 	[Header("Ball")]
 	[SerializeField] private Transform ballSpawnPosition = null;
 	[Header("Win")]
@@ -24,6 +25,11 @@ public class GameManager : NetworkManager
 	private bool _ended = false;
 	private int leftTeamPlayerSize = 0;
 	private int rightTeamPlayerSize = 0;
+
+	public Score Score
+	{
+		get => score;
+	}
 
 	public static GameManager Instance
 	{
@@ -46,11 +52,19 @@ public class GameManager : NetworkManager
 		Transform start = numPlayers % 2 == 0 ? leftPlayerPositions[leftTeamPlayerSize++] : rightPlayerPositions[rightTeamPlayerSize++];
 		Player player = Instantiate(playerPrefab, start.position, start.rotation).GetComponent<Player>();
 
+		player.TeamSide = numPlayers % 2 == 0 ? LeftRight.Left : LeftRight.Right;
 		player.PlayerColor = playerColors.GetColorByIndex(numPlayers);
 		NetworkServer.AddPlayerForConnection(conn, player.gameObject);
 	}
 
-	private IEnumerator ChangeScene(float waitTime)
+	public override void OnServerConnect(NetworkConnection conn)
+	{
+		score.SetScore(score.LeftScore, score.RightScore);
+
+		base.OnServerConnect(conn);
+	}
+
+	private IEnumerator __loadMenu(float waitTime)
 	{
 		yield return new WaitForSeconds(waitTime);
 		SceneManager.LoadScene("Menu");

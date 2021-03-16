@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
+using Mirror;
 
 public class Goal : MonoBehaviour
 {
@@ -27,6 +28,7 @@ public class Goal : MonoBehaviour
 			return;
 		audioSource.PlayOneShot(onGoalSound);
 		onGoal.Invoke();
+		GameManager.Instance.Score.AddScore(side);
 		Shockwave();
 	}
 

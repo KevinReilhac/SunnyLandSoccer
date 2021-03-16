@@ -4,6 +4,7 @@ using UnityEngine;
 
 public enum LeftRight
 {
+	None,
 	Left,
 	Right
 }
