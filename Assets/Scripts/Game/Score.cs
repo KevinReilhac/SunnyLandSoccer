@@ -36,11 +36,11 @@ public class Score : NetworkBehaviour
 		get => rightScore;
 	}
 
-	[ClientRpc]
 	public void SetScore(int _leftScore, int _rightScore)
 	{
 		leftScore = _leftScore;
 		rightScore = _rightScore;
+		onScore.Invoke(leftScore, rightScore);
 	}
 
 	public int GetScore(LeftRight side)

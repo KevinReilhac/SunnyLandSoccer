@@ -13,8 +13,8 @@ public class GameManager : NetworkManager
 	[SerializeField] private Transform ballSpawnPosition = null;
 	[Header("Win")]
 	[SerializeField] private GameObject centerBend = null;
-	[SerializeField] private GameObject redWin = null;
-	[SerializeField] private GameObject blueWin = null;
+	[SerializeField] private GameObject winBand = null;
+	[SerializeField] private GameObject loseBand = null;
 	[Header("Options")]
 	[SerializeField] private PlayerColors playerColors;
 	[SerializeField] private GameMode gameMode = null;
@@ -45,6 +45,7 @@ public class GameManager : NetworkManager
 	{
 		base.Awake();
 		maxConnections = gameMode.MaxPlayer;
+		score.OnScore.AddListener(CheckWin);
 	}
 
 	public override void OnServerAddPlayer(NetworkConnection conn)
@@ -64,9 +65,28 @@ public class GameManager : NetworkManager
 		base.OnServerConnect(conn);
 	}
 
+	private void CheckWin(int leftScore, int rightScore)
+	{
+		if (leftScore >= gameMode.MaxScore || rightScore >= gameMode.MaxScore)
+			EndScreen();
+		StartCoroutine(__loadMenu(3f));
+	}
+
+	private void EndScreen()
+	{
+		bool hasWin = true;
+
+		centerBend.SetActive(true);
+		if (hasWin)
+			winBand.SetActive(true);
+		else
+			loseBand.SetActive(false);
+	}
+
 	private IEnumerator __loadMenu(float waitTime)
 	{
 		yield return new WaitForSeconds(waitTime);
 		SceneManager.LoadScene("Menu");
 	}
+
 }
