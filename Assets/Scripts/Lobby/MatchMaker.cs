@@ -76,18 +76,17 @@ public class MatchMaker : NetworkBehaviour
 
 	public bool HostGame(string matchId, GameObject player)
 	{
-		if (matchIds.Contains(matchId))
+		if (!matchIds.Contains(matchId))
 		{
 			matches.Add(new Match(matchId, player));
 			matchIds.Add(matchId);
+			return (true);
 		}
 		else
 		{
 			Debug.LogError(matchId + " already exist");
 			return (false);
 		}
-
-		return (true);
 	}
 
 	public bool JoinGame(string matchId, GameObject player)
@@ -103,6 +102,7 @@ public class MatchMaker : NetworkBehaviour
 				}
 			}
 			Debug.Log("Match joined");
+			return (true);
 		}
 		else
 		{

@@ -22,6 +22,7 @@ public class NetworkPlayer : NetworkBehaviour
 
 	public void Start()
 	{
+		if (isLocalPlayer)
 			local = this;
 	}
 

@@ -43,6 +43,7 @@ public class UILobby : MonoBehaviour
 	{
 		if (success)
 		{
+			Debug.Log("Host success");
 		}
 		else
 		{
