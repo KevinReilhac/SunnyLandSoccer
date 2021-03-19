@@ -52,8 +52,12 @@ public class GameManager : NetworkManager
 	{
 		Transform start = numPlayers % 2 == 0 ? leftPlayerPositions[leftTeamPlayerSize++] : rightPlayerPositions[rightTeamPlayerSize++];
 		Player player = Instantiate(playerPrefab, start.position, start.rotation).GetComponent<Player>();
+		Vector3 scale = player.transform.localScale;
+		bool isLeft = numPlayers % 2 == 0;
 
 		player.TeamSide = numPlayers % 2 == 0 ? LeftRight.Left : LeftRight.Right;
+		scale.x = scale.x * (player.TeamSide == LeftRight.Left ? 1 : -1);
+		player.transform.localScale = scale;
 		player.PlayerColor = playerColors.GetColorByIndex(numPlayers);
 		NetworkServer.AddPlayerForConnection(conn, player.gameObject);
 	}
