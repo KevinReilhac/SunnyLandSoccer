@@ -28,7 +28,6 @@ public class Goal : MonoBehaviour
 			return;
 		audioSource.PlayOneShot(onGoalSound);
 		onGoal.Invoke();
-		GameManager.Instance.Score.AddScore(side);
 		Shockwave();
 	}
 

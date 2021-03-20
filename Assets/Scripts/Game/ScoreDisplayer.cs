@@ -15,7 +15,6 @@ public class ScoreDisplayer : NetworkBehaviour
 
 	private void Awake()
 	{
-		GameManager.Instance.Score.OnScore.AddListener(UpdateScore);
 	}
 
 	[ClientRpc]

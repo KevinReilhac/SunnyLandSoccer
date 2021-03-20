@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Text;
 using System.Security.Cryptography;
 using System.Collections;
@@ -6,43 +7,29 @@ using System.Collections.Generic;
 using UnityEngine;
 using Mirror;
 
-public static class MatchExtentions
-{
-	public static Guid ToGuid(this string id)
-	{
-		MD5CryptoServiceProvider provider = new MD5CryptoServiceProvider();
-
-		byte[] inputBytes = Encoding.Default.GetBytes(id);
-		byte[] hashBytes = provider.ComputeHash(inputBytes);
-
-		return (new Guid(hashBytes));
-	}
-}
-
 public class MatchMaker : NetworkBehaviour
 {
 //-------------------------------[Other classes]------------------------------//
+[System.Serializable]
+public class Match
+{
 	[System.Serializable]
 	public class SyncListGameObject : SyncList<GameObject> {};
 
-	[System.Serializable]
-	public class Match
+	public string id = null;
+	public SyncListGameObject players = new SyncListGameObject();
+
+	public Match(string _id, GameObject _player)
 	{
-		public string id = null;
-		public SyncListGameObject players = new SyncListGameObject();
-
-		public Match(string _id, GameObject _player)
-		{
-			id = _id;
-			players.Add(_player);
-		}
-
-		public Match() {}
+		id = _id;
+		players.Add(_player);
 	}
+
+	public Match() {}
+}
 
 	[System.Serializable]
 	public class SyncListMatch : SyncList<Match> {};
-
 
 //-------------------------------[Statics]----------------------------------//
 	private static MatchMaker instance = null;
@@ -74,6 +61,8 @@ public class MatchMaker : NetworkBehaviour
 	private SyncListMatch matches = new SyncListMatch();
 	private SyncList<string> matchIds = new SyncList<string>();
 
+	[SerializeField] GameManager gameManagerPrefab = null;
+
 	public bool HostGame(string matchId, GameObject player)
 	{
 		if (!matchIds.Contains(matchId))
@@ -89,19 +78,32 @@ public class MatchMaker : NetworkBehaviour
 		}
 	}
 
+	public void BeginGame(string matchId)
+	{
+		Match match = GetMatchById(matchId);
+		GameManager gameManager = Instantiate(gameManagerPrefab);
+
+		gameManager.GetComponent<NetworkMatchChecker>().matchId = matchId.ToGuid();
+		foreach (GameObject player in match.players)
+		{
+			NetworkPlayer networkPlayer = player.GetComponent<NetworkPlayer>();
+
+			if (networkPlayer)
+			{
+				networkPlayer.StartGame();
+			}
+		}
+	}
+
 	public bool JoinGame(string matchId, GameObject player)
 	{
-		if (matchIds.Contains(matchId))
+		Match match = GetMatchById(matchId);
+
+		if (match != null)
 		{
-			foreach (Match match in matches)
-			{
-				if (match.id == matchId)
-				{
-					match.players.Add(player);
-					break;
-				}
-			}
-			Debug.Log("Match joined");
+			match.players.Add(player);
+			if (match.players.Count == 2)
+				BeginGame(matchId);
 			return (true);
 		}
 		else
@@ -109,8 +111,19 @@ public class MatchMaker : NetworkBehaviour
 			Debug.LogError(matchId + " not exist");
 			return (false);
 		}
-
-		return (true);
 	}
 
+	private Match GetMatchById(string matchId)
+	{
+		if (!matchIds.Contains(matchId))
+			return (null);
+		foreach (Match match in matches)
+		{
+			if (match.id == matchId)
+			{
+				return (match);
+			}
+		}
+		return (null);
+	}
 }

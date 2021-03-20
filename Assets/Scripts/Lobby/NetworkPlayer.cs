@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine.SceneManagement;
 using UnityEngine;
 using Mirror;
 
@@ -18,6 +19,7 @@ public class NetworkPlayer : NetworkBehaviour
 	private void Awake()
 	{
 		matchChecker = GetComponent<NetworkMatchChecker>();
+		DontDestroyOnLoad(gameObject);
 	}
 
 	public void Start()
@@ -87,5 +89,30 @@ public class NetworkPlayer : NetworkBehaviour
 	{
 		Debug.Log($"MatchID: {MatchId}");
 		UILobby.Instance.JoinSuccess(success);
+	}
+//-----------------------------[Join]-----------------------------------------//
+	public void BeginGame(string _inputId)
+	{
+		CmdBeginGame(_inputId);
+	}
+
+	[Command]
+	public void CmdBeginGame(string matchId)
+	{
+		TargetBeginGame();
+		MatchMaker.Instance.BeginGame(matchId);
+		Debug.Log("Begin game");
+	}
+
+	[TargetRpc]
+	public void TargetBeginGame()
+	{
+		Debug.Log($"Match {MatchId} begin");
+		SceneManager.LoadScene("Game");
+	}
+
+	public void StartGame()
+	{
+		TargetBeginGame();
 	}
 }
